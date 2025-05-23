@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Hasil Prediksi - {{ stock }}{% endblock %}
+{% block content %}
+<h2>Hasil Prediksi Saham <strong>{{ stock }}</strong></h2>
+<div class="graph-container">
+    {{ graph_html|safe }}
+</div>
+
+<h3>Hasil Evaluasi Model</h3>
+<ul>
+    <li><strong>MSE:</strong> {{ mse }}</li>
+    <li><strong>RMSE:</strong> {{ rmse }}</li>
+    <li><strong>MAE:</strong> {{ mae }}</li>
+    <li><strong>R² Score:</strong> {{ r2 }}</li>
+    <li><strong>MAPE:</strong> {{ mape }}</li>
+</ul>
+
+<a href="/" class="btn-secondary"><i class="fas fa-arrow-left"></i> Kembali</a>
+{% endblock %}

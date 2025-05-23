@@ -87,6 +87,7 @@ def build_gru_model(input_shape):
         Dense(1)
     ])
     model.compile(optimizer=Adam(learning_rate=0.001), loss='mse', metrics=['mae'])
+    model.summary()
     return model
 
 # Fungsi untuk menghitung MAPE
@@ -102,67 +103,81 @@ def predict_future(model, last_sequence, scaler, time_step, future_steps, numeri
     future_predictions = []
     current_sequence = last_sequence.copy()
     step_size = 30
-    
-    historical_changes = np.diff(last_sequence, axis=0) / last_sequence[:-1]
-    avg_changes = np.clip(np.mean(historical_changes, axis=0), -0.005, 0.005)
-    
+    stagnant_count = 0
+    previous_pred = None
+
+    # Hitung perubahan historis relatif (persentase perubahan)
+    historical_changes = np.diff(last_sequence, axis=0) / (last_sequence[:-1] + 1e-8)
+    # Lebarkan batas clipping perubahan rata-rata agar variasi lebih besar
+    avg_changes = np.clip(np.mean(historical_changes, axis=0), -0.01, 0.01)
+
+    # Data harga asli (inverse transform kolom harga)
     historical_prices = scaler.inverse_transform(last_sequence)[:, 3]
-    min_price = historical_prices.min() * 0.8
-    max_price = historical_prices.max() * 1.2
+    min_price = historical_prices.min() * 0.8  # Batas bawah prediksi lebih longgar
+    max_price = historical_prices.max() * 1.2  # Batas atas prediksi lebih longgar
     avg_price = historical_prices.mean()
-    
-    historical_trend = (historical_prices[-1] - historical_prices[0]) / historical_prices[0]
-    print(f"Historical trend (last 60 days) in original scale: {historical_trend:.4f}")
-    
-    # Hitung volatilitas historis untuk menyesuaikan parameter
+
+    # Volatilitas dan tren historis
     historical_volatility = np.std(historical_changes[:, 3])
-    volatility_factor = min(historical_volatility / 0.05, 2.0)  # Kurangi efek volatilitas, batasi maksimum 2.0
-    
+    volatility_factor = min(historical_volatility / 0.04, 3.5)  # Faktor volatilitas
     recent_trend = np.mean(historical_changes[-10:, 3])
     long_term_trend = np.mean(historical_changes[:, 3])
-    trend_adjustment = (-recent_trend * 10.0 + long_term_trend * 0.01) * (1 if recent_trend >= 0 else 2)  # Perkuat efek tren negatif
-    
-    # Sesuaikan parameter berdasarkan volatilitas
+
+    # Penyesuaian tren dan momentum
+    trend_adjustment = max(-0.05, (-recent_trend * 7.0 + long_term_trend * 0.02))
     trend_boost = 2.0 * volatility_factor if recent_trend > 0 else 1.0
-    negative_trend_boost = 10.0 * volatility_factor if recent_trend < 0 else 1.0
-    initial_momentum = (recent_trend * 7.0 * volatility_factor) if recent_trend > 0 else (recent_trend * 5.0 * volatility_factor)
-    initial_boost = (0.1 * volatility_factor) if recent_trend > 0 else (-0.2 * volatility_factor) if recent_trend < 0 else 0.0
-    
-    last_price = historical_prices[-1]
-    recovery_factor = (avg_price - last_price) / avg_price * 0.1
-    
-    # Sesuaikan noise berdasarkan volatilitas
-    noise_factor = historical_volatility * volatility_factor * 1.5  # Tingkatkan noise untuk variasi yang lebih besar
-    
+    initial_momentum = (recent_trend * 7.0 * volatility_factor)
+    initial_boost = 0.2 * volatility_factor if recent_trend > 0 else -0.2 * volatility_factor
+    recovery_factor = ((avg_price - historical_prices[-1]) / avg_price) * 0.3
+    noise_factor = max(historical_volatility * volatility_factor * 3.0, 0.03)
+
     for i in range(0, future_steps, step_size):
         steps_to_predict = min(step_size, future_steps - i)
         for j in range(steps_to_predict):
-            current_sequence_reshaped = current_sequence.reshape((1, time_step, len(numeric_cols)))
-            next_pred = model.predict(current_sequence_reshaped, verbose=0)[0, 0]
+            x_input = current_sequence.reshape((1, time_step, len(numeric_cols)))
+            next_pred = model.predict(x_input, verbose=0)[0, 0]
+
+            # Variasi noise dan momentum yang lebih besar
             noise = np.random.normal(0, noise_factor)
+            sinusoidal_variation = 0.02 * np.sin((i + j) / 5.0)
             momentum = initial_momentum * (1 - (j / 30)) if j < 30 else 0
             boost = initial_boost * (1 - (j / 10)) if j < 10 else 0
-            adjustment = (trend_adjustment * trend_boost * negative_trend_boost) + recovery_factor * ((i + j) / future_steps) + momentum + boost + noise
-            next_pred = next_pred + adjustment
-            next_pred = np.clip(next_pred, 0, 1)
+
+            adjustment = (trend_adjustment * trend_boost) + (recovery_factor * ((i + j) / future_steps)) + momentum + boost + noise + sinusoidal_variation
+            next_pred = np.clip(next_pred + adjustment, 0.01, 0.99)
+
+            # Deteksi stagnasi dan paksa variasi jika perlu
+            if previous_pred is not None and abs(next_pred - previous_pred) < 0.0008:
+                stagnant_count += 1
+            else:
+                stagnant_count = 0
+
+            if stagnant_count >= 2:
+                next_pred += np.random.choice([-0.02, 0.02]) + np.random.normal(0, 0.01)
+                next_pred = np.clip(next_pred, 0.01, 0.99)
+                stagnant_count = 0
+
             future_predictions.append(next_pred)
-            
+            previous_pred = next_pred
+
+            # Update sequence untuk prediksi berikutnya
             next_sequence = current_sequence[1:, :].copy()
             new_row = current_sequence[-1, :].copy()
-            new_row[3] = next_pred
-            for k in [0, 1, 2, 4]:
-                new_row[k] = new_row[k] * (1 + avg_changes[k])
-                new_row[k] = np.clip(new_row[k], 0, 1)
+            new_row[3] = next_pred  # Update harga close
+
+            # Update fitur lain dengan drift dan rata-rata perubahan
+            for k in [0, 1, 2, 4]:  # Kolom selain close (open, high, low, volume)
+                drift = np.random.normal(0, 0.004)
+                new_row[k] = np.clip(new_row[k] * (1 + avg_changes[k] + drift), 0, 1)
+
             current_sequence = np.vstack([next_sequence, new_row])
-    
+
+    # Inverse transform hasil prediksi harga close
     dummy = np.zeros((len(future_predictions), len(numeric_cols)))
     dummy[:, 3] = future_predictions
     future_prices = scaler.inverse_transform(dummy)[:, 3]
     future_prices = np.clip(future_prices, min_price, max_price)
-    
-    print(f"First 5 normalized predictions: {future_predictions[:5]}")
-    print(f"First 5 inverse transformed prices: {future_prices[:5]}")
-    
+
     return future_prices
 
 # Streamlit aplikasi

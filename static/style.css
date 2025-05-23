@@ -1,0 +1,310 @@
+/* Reset dan dasar */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+    color: #f1f1f1;
+    min-height: 100vh;
+}
+
+/* Header dan footer */
+header {
+    background-color: #141e30;
+    padding: 20px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+header h1 {
+    color: #00ffe7;
+    text-align: center;
+    font-weight: 600;
+    font-size: 1.8rem;
+}
+footer {
+    background-color: #141e30;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+/* Container dan layout */
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Form dan tombol */
+.form-predict {
+    text-align: center;
+    margin-top: 40px;
+}
+.form-predict label {
+    font-size: 1.1em;
+    margin-right: 10px;
+}
+.form-predict select {
+    padding: 10px;
+    font-size: 1em;
+    border-radius: 6px;
+    border: none;
+}
+.btn-primary, .btn-secondary {
+    margin-top: 20px;
+    padding: 10px 30px;
+    font-size: 1em;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+.btn-primary {
+    background-color: #00b894;
+    color: white;
+}
+.btn-primary:hover {
+    background-color: #00a386;
+}
+.btn-secondary {
+    background-color: transparent;
+    border: 2px solid #00ffe7;
+    color: #00ffe7;
+}
+.btn-secondary:hover {
+    background-color: #00ffe7;
+    color: #1d1d1d;
+}
+
+/* Hasil prediksi */
+.graph-container {
+    margin: 40px 0;
+}
+ul {
+    list-style: none;
+    padding-left: 0;
+}
+ul li {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+}
+
+/* Loading spinner */
+.loading-message h2 {
+    color: #00ffe7;
+}
+.spinner {
+    border: 16px solid #f3f3f3;
+    border-top: 16px solid #00ffe7;
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    animation: spin 1.2s linear infinite;
+    margin: 20px auto;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+    .form-predict select, .btn-primary {
+        width: 80%;
+    }
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main.container {
+    flex: 1;
+}
+
+/* Footer */
+footer {
+    background-color: #141e30;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+    .home-background {
+        background: url("/static/img/background.jpeg") no-repeat center center fixed;
+        background-size: cover;
+        background-attachment: fixed;
+    }
+
+    /* Reset dan dasar */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+    color: #f1f1f1;
+    min-height: 100vh;
+}
+
+/* Header dan footer */
+header {
+    background-color: #141e30;
+    padding: 20px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+header h1 {
+    color: #00ffe7;
+    text-align: center;
+    font-weight: 600;
+    font-size: 1.8rem;
+}
+footer {
+    background-color: #141e30;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+/* Container dan layout */
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Form dan tombol */
+.form-predict {
+    text-align: center;
+    margin-top: 40px;
+}
+.form-predict label {
+    font-size: 1.1em;
+    margin-right: 10px;
+}
+.form-predict select {
+    padding: 10px;
+    font-size: 1em;
+    border-radius: 6px;
+    border: none;
+}
+.btn-primary, .btn-secondary {
+    margin-top: 20px;
+    padding: 10px 30px;
+    font-size: 1em;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+.btn-primary {
+    background-color: #00b894;
+    color: white;
+}
+.btn-primary:hover {
+    background-color: #00a386;
+}
+.btn-secondary {
+    background-color: transparent;
+    border: 2px solid #00ffe7;
+    color: #00ffe7;
+}
+.btn-secondary:hover {
+    background-color: #00ffe7;
+    color: #1d1d1d;
+}
+
+/* Hasil prediksi */
+.graph-container {
+    margin: 40px 0;
+}
+ul {
+    list-style: none;
+    padding-left: 0;
+}
+ul li {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+}
+
+/* Loading spinner */
+.loading-message h2 {
+    color: #00ffe7;
+}
+.spinner {
+    border: 16px solid #f3f3f3;
+    border-top: 16px solid #00ffe7;
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    animation: spin 1.2s linear infinite;
+    margin: 20px auto;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+    .form-predict select, .btn-primary {
+        width: 80%;
+    }
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main.container {
+    flex: 1;
+}
+
+/* Footer */
+footer {
+    background-color: #141e30;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+.home-background {
+    background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
+                url("/static/img/graphic.jpg") no-repeat center center fixed;
+    background-size: cover;
+}
+
+.graph-container {
+    width: 1000px;
+    overflow-x: auto;
+    padding: 20px;
+}
+.plotly-graph-div {
+    width:  1000px;
+    max-width: auto;
+}
+

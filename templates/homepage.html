@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Beranda - Aplikasi Prediksi Saham{% endblock %}
+{% block content %}
+<div class="homepage-intro" style="text-align:center; padding: 80px 20px; background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); color: #f1f1f1; min-height: 90vh;">
+    <img src="https://cdn-icons-png.flaticon.com/512/2910/2910768.png" alt="Icon Saham" width="120" style="margin-bottom: 20px; filter: brightness(0) invert(1); animation: fadeIn 2s ease-in-out;">
+    <h2 style="font-size: 2.5rem; color: #00ffe7; animation: fadeInUp 1.2s ease-in-out;">Selamat Datang di Aplikasi Prediksi Harga Saham Perbankan</h2>
+    <p style="max-width: 900px; margin: 30px auto; font-size: 1.2rem; line-height: 1.8; animation: fadeInUp 1.5s ease-in-out;">
+        Aplikasi ini dirancang untuk membantu investor dan analis pasar dalam memprediksi harga saham <strong>Bluechip sektor perbankan</strong> di Indonesia.
+        Sistem ini menggunakan pendekatan <strong>Deep Learning</strong> berbasis <strong>Gated Recurrent Unit (GRU)</strong> dalam teknik <strong>Time Series Forecasting</strong> untuk memproyeksikan tren harga saham selama 6 bulan ke depan secara akurat.
+        <br><br>
+        Prediksi dimulai dari <strong>Januari 2025 hingga Juni 2025</strong>, memberikan Anda wawasan yang kuat untuk perencanaan investasi.
+    </p>
+    <div style="max-width: 800px; margin: 40px auto; text-align: left; font-size: 1.15rem; background: rgba(255, 255, 255, 0.05); padding: 20px 30px; border-radius: 10px;">
+        <p><strong>Saham yang dianalisis dalam sistem ini meliputi:</strong></p>
+        <ul style="list-style-type: none; padding-left: 0;">
+            <li>📈 <strong>BBCA</strong> - Bank Central Asia</li>
+            <li>📊 <strong>BBRI</strong> - Bank Rakyat Indonesia</li>
+            <li>📉 <strong>BBNI</strong> - Bank Negara Indonesia</li>
+        </ul>
+        <p>Data historis diambil dari Yahoo Finance selama <strong>5 tahun</strong> terakhir, yaitu dari <strong>Desember 2019 hingga Desember 2024</strong>.</p>
+    </div>
+
+    <div style="max-width: 900px; margin: 50px auto; background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 30px;">
+        <h3 style="color: #00ffe7; font-size: 1.8rem; margin-bottom: 20px;">🔰 Panduan Menggunakan Aplikasi</h3>
+        <ol style="text-align: left; font-size: 1.1rem; line-height: 1.8;">
+            <li>Pilih salah satu saham yang tersedia (BBCA, BBRI, atau BBNI).</li>
+            <li>Klik tombol "Lakukan Prediksi" untuk memulai proses prediksi harga.</li>
+            <li>Sistem akan memuat model GRU dan melakukan prediksi harga untuk 6 bulan ke depan.</li>
+            <li>Setelah proses selesai, Anda akan melihat grafik harga aktual, prediksi historis, dan proyeksi masa depan.</li>
+        </ol>
+        <p style="margin-top: 15px;">Prediksi dapat digunakan sebagai referensi tambahan dalam pengambilan keputusan investasi.</p>
+    </div>
+
+    <p style="font-size: 1.15rem; margin-top: 30px; animation: fadeIn 1.8s ease-in-out;">
+        Untuk informasi resmi pasar saham Indonesia, kunjungi situs Bursa Efek Indonesia (IDX):<br>
+        <a href="https://www.idx.co.id" target="_blank" style="color: #00ffe7; text-decoration: underline; font-weight: bold;">IDX - Bursa Efek Indonesia</a>
+    </p>
+
+    <a href="/predict" class="btn-primary" style="margin-top: 50px; font-size: 1.2rem; padding: 14px 32px; display: inline-block; background-color: #00ffe7; color: #1e1e1e; border-radius: 30px; font-weight: bold; transition: all 0.3s ease-in-out;">
+        🔍 Mulai Prediksi Saham
+    </a>
+</div>
+
+<style>
+@keyframes fadeInUp {
+  from {opacity: 0; transform: translateY(20px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+@keyframes fadeIn {
+  from {opacity: 0;}
+  to {opacity: 1;}
+}
+</style>
+{% endblock %}

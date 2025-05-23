@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Home - Prediksi Saham{% endblock %}
+{% block body_class %}home-background{% endblock %}
+{% block content %}
+<form action="/loading" method="post" class="form-predict">
+    <p style="max-width: 900px; margin: 30px auto; font-size: 1.2rem; line-height: 1.8; animation: fadeInUp 1.5s ease-in-out;">
+        <strong>Silahkan Memilih Saham Yang Akan Diproses Untuk Prediksi</strong></p>
+    <label for="stock">Pilih Saham:</label>
+    <select name="stock" id="stock" required>
+        <option value="" disabled selected>-- Pilih Saham --</option>
+        <option value="BBRI">BBRI</option>
+        <option value="BBNI">BBNI</option>
+        <option value="BBCA">BBCA</option>
+    </select>
+    <button type="submit" class="btn-primary">Prediksi</button>
+</form>
+
+<div id="loading-message" style="display:none; margin-top: 20px;">
+    <p>⏳ Model sedang dilatih, mohon tunggu sebentar...</p>
+</div>
+
+<script>
+function showLoading() {
+    document.getElementById("loading-message").style.display = "block";
+}
+</script>
+{% endblock %}
