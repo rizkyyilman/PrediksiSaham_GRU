@@ -1,20 +1,30 @@
 import pandas as pd
 import numpy as np
 import os
+import random
+import tensorflow as tf
 from flask import Flask, render_template, request
 import plotly.graph_objs as go
 import plotly.offline as pyo
 from datetime import timedelta
 from sklearn.metrics import r2_score
-
-
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, mean_absolute_error
-from tensorflow.keras.models import Sequential
+from tensorflow.keras.losses import MeanSquaredError
+from tensorflow.keras.metrics import MeanAbsoluteError
+from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import GRU, Dense, Dropout, Input
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.optimizers import Adam
+
+# ---------------------------
+# Seed for reproducibility
+# ---------------------------
+SEED = 42
+np.random.seed(SEED)
+random.seed(SEED)
+tf.random.set_seed(SEED)
 
 # ---------------------------
 # Fungsi MAPE
@@ -51,13 +61,11 @@ def load_and_process_data():
         df['Stock'] = stock
         df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dt.tz_localize(None)
 
-        # Simpan scaler Close SEBELUM normalisasi
         close_data = df[['Close']].astype(float)
         scaler_close = MinMaxScaler()
         scaler_close.fit(close_data)
         scalers_close[stock] = scaler_close
 
-        # Normalisasi semua kolom numerik
         scaler = MinMaxScaler()
         df[['Open', 'High', 'Low', 'Close', 'Volume']] = scaler.fit_transform(df[['Open', 'High', 'Low', 'Close', 'Volume']])
         scalers[stock] = scaler
@@ -96,13 +104,18 @@ def build_gru_model(input_shape):
         Dropout(0.3),
         Dense(1)
     ])
-    model.compile(optimizer=Adam(learning_rate=0.001), loss='mse', metrics=['mae'])
+    model.compile(
+        optimizer=Adam(learning_rate=0.001),
+        loss=MeanSquaredError(),
+        metrics=[MeanAbsoluteError()]
+    )
     return model
 
 # ---------------------------
 # Prediksi masa depan
 # ---------------------------
 def predict_future(model, last_sequence, scaler_close, time_step, future_steps, numeric_cols):
+    np.random.seed(SEED)  # Supaya noise konsisten setiap prediksi
     current_sequence = last_sequence.copy()
     predictions = []
 
@@ -137,7 +150,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return render_template('homepage.html')  # ubah ke homepage.html
+    return render_template('homepage.html')
 
 @app.route('/predict')
 def predict_page():
@@ -151,7 +164,13 @@ def loading():
 @app.route('/processing')
 def processing():
     stock = request.args.get('stock')
-    return predict(stock)  # panggil fungsi prediksi
+    return predict(stock)
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+MODEL_DIR = "saved_models"
 
 def predict(stock):
     df_combined, numeric_cols, scalers, df_list, scalers_close = load_and_process_data()
@@ -164,19 +183,20 @@ def predict(stock):
     time_step = 60
     future_steps = 180
 
-    if len(data) <= time_step:
-        return f"Data untuk {stock} kurang dari {time_step} baris.", 400
-
+    model_path = os.path.join(MODEL_DIR, f"{stock}_gru_model.h5")
     X, y = create_time_series(data, time_step)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
 
-    model = build_gru_model((X_train.shape[1], X_train.shape[2]))
-    early_stop = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
-    model.fit(X_train, y_train, validation_split=0.2, epochs=100, batch_size=64, callbacks=[early_stop], verbose=0)
+    if os.path.exists(model_path):
+        model = load_model(model_path)
+    else:
+        model = build_gru_model((X_train.shape[1], X_train.shape[2]))
+        early_stop = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+        model.fit(X_train, y_train, validation_split=0.2, epochs=100, batch_size=64, callbacks=[early_stop], verbose=0)
+        os.makedirs(MODEL_DIR, exist_ok=True)
+        model.save(model_path)
 
     scaler_close = scalers_close[stock]
-
-    # Evaluasi hanya menggunakan data test
     y_pred_test = model.predict(X_test, verbose=0)
     mse = mean_squared_error(y_test, y_pred_test)
     rmse = np.sqrt(mse)
@@ -184,20 +204,17 @@ def predict(stock):
     r2 = r2_score(y_test, y_pred_test)
     mape = mean_absolute_percentage_error(y_test, y_pred_test)
 
-    # Buat prediksi historis hanya untuk visualisasi
-    historical_predictions = []
-    for i in range(len(data) - time_step):
-        x_input = data[i:i+time_step].reshape((1, time_step, len(numeric_cols)))
-        pred = model.predict(x_input, verbose=0)[0, 0]
-        historical_predictions.append(pred)
-    historical_pred_prices = scaler_close.inverse_transform(np.array(historical_predictions).reshape(-1, 1)).flatten()
+    # --------- Efisiensi prediksi historis ---------
+    X_all, _ = create_time_series(data, time_step)
+    historical_predictions = model.predict(X_all, verbose=0).flatten()
+    historical_pred_prices = scaler_close.inverse_transform(historical_predictions.reshape(-1, 1)).flatten()
+    # ------------------------------------------------
 
     historical_prices = scaler_close.inverse_transform(stock_df[['Close']].values).flatten()
     historical_dates = stock_df['Date'].values
 
     last_sequence = data[-time_step:]
     future_prices = predict_future(model, last_sequence, scaler_close, time_step, future_steps, numeric_cols)
-
     last_date = stock_df['Date'].iloc[-1]
     future_dates = [last_date + timedelta(days=i) for i in range(1, future_steps + 1)]
 
@@ -207,7 +224,7 @@ def predict(stock):
 
     layout = go.Layout(
         title={
-            'text': f'Harga Saham {stock} - Historis dan Prediksi 6 Bulan ke Depan (Januari - Juni)',
+            'text': f'Harga Saham {stock} - Historis dan Prediksi 6 Bulan ke Depan (Januari - Juni) 2025',
             'x': 0.5,
             'xanchor': 'center'
         },
@@ -216,14 +233,7 @@ def predict(stock):
         margin=dict(l=60, r=30, t=80, b=50),
         xaxis=dict(title='Tanggal'),
         yaxis=dict(title='Harga (IDR)', range=[min(historical_prices.min(), future_prices.min()) * 0.9, max(historical_prices.max(), future_prices.max()) * 1.1]),
-        legend=dict(
-            orientation="h",
-            yanchor="top",
-            y=-0.3,
-            xanchor="center",
-            x=0.5,
-            font=dict(size=12)
-        )
+        legend=dict(orientation="h", yanchor="top", y=-0.3, xanchor="center", x=0.5, font=dict(size=12))
     )
     fig = go.Figure(data=[trace_actual, trace_pred_historical, trace_future], layout=layout)
     graph_html = pyo.plot(fig, output_type='div', include_plotlyjs='cdn', config={'responsive': True})
@@ -239,6 +249,5 @@ def predict(stock):
         mape=round(mape, 2)
     )
 
-
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)      
+    app.run(debug=True, port=5000, use_reloader=False)
