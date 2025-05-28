@@ -1,27 +1,89 @@
 {% extends "base.html" %}
-{% block title %}Home - Prediksi Saham{% endblock %}
+
+{% block title %}Home - Berita Indonesia{% endblock %}
 {% block body_class %}home-background{% endblock %}
+
 {% block content %}
-<form action="/loading" method="post" class="form-predict">
-    <p style="max-width: 900px; margin: 30px auto; font-size: 1.2rem; line-height: 1.8; animation: fadeInUp 1.5s ease-in-out;">
-        <strong>Silahkan Memilih Saham Yang Akan Diproses Untuk Prediksi</strong></p>
-    <label for="stock">Pilih Saham:</label>
-    <select name="stock" id="stock" required>
-        <option value="" disabled selected>-- Pilih Saham --</option>
-        <option value="BBRI">BBRI</option>
-        <option value="BBNI">BBNI</option>
-        <option value="BBCA">BBCA</option>
-    </select>
-    <button type="submit" class="btn-primary">Prediksi</button>
-</form>
+    <h2 style="font-size: 2.5rem; color: #ffffff;">Berita Terkini</h2>
+    <p style="max-width: 900px; margin: 30px auto; font-size: 1.2rem; line-height: 1.8;">
+        <strong>Berita terkini mengenai saham dan pasar Indonesia.</strong>
+    </p>
 
-<div id="loading-message" style="display:none; margin-top: 20px;">
-    <p>⏳ Model sedang dilatih, mohon tunggu sebentar...</p>
-</div>
+    <form action="/loading" method="post" class="form-predict" style="max-width: 600px; margin: 50px auto; background: rgba(255, 255, 255, 0.1); padding: 20px 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); z-index: 2; position: relative;">
+        <p style="font-size: 1.2rem; line-height: 1.8;"> <strong>Silahkan Pilih Saham yang Akan Diproses</strong> </p>
+    
+        <label for="stock" style="font-size: 1.1rem; color: #ffffff;">Pilih Saham:</label>
+        <select name="stock" id="stock" required style="width: 100%; padding: 12px; border-radius: 5px; font-size: 1.1rem; background: #f5f5f5; border: 1px solid #ccc; margin-bottom: 20px;">
+            <option value="" disabled selected>-- Pilih Saham --</option>
+            <option value="BBRI">BBRI - Bank Rakyat Indonesia</option>
+            <option value="BBNI">BBNI - Bank Negara Indonesia</option>
+            <option value="BBCA">BBCA - Bank Central Asia</option>
+        </select>
+    
+        <button type="submit" class="btn-primary" style="background-color: #00ffe7; color: #1e1e1e; font-weight: bold; border-radius: 30px; padding: 12px 30px; font-size: 1.2rem; transition: all 0.3s ease; width: 100%; border: none;">
+            Prediksi
+        </button>
+    
+        <!-- Loading Message -->
+        <div id="loading-message" style="display:none; margin-top: 20px; font-size: 1.2rem; color: #ffffff;">
+            ⏳ Model sedang dilatih, mohon tunggu sebentar...
+        </div>
+    </form>
+    
+    <!-- Berita Umum Terkait -->
+    <div id="general-news" style="margin-top: 30px; font-size: 1.2rem; z-index: 1; position: relative;">
+        <h3 style="color: #fff;">Berita Terkini Indonesia</h3>
+        <div id="news-container" style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);">Memuat berita...</div>
+    </div>
 
-<script>
-function showLoading() {
-    document.getElementById("loading-message").style.display = "block";
-}
-</script>
+    <script>
+        let currentPage = 1; // Tracking current page of news
+        const pageSize = 5; // Number of news articles to show per page
+        // Fungsi untuk mengambil dan menampilkan berita Indonesia terkini
+        document.getElementById("stock").addEventListener("change", function() {
+            let stock = this.value;
+            fetchNews(stock);
+        });
+        https://newsapi.org/v2/everything?q=berita+Indonesia&apiKey=6de5a7bd89774d9e9ad0d8054920c9da
+        // Mengambil berita terkini mengenai Indonesia secara umum
+        function fetchNews(stock) {
+            // Menggunakan kata kunci yang lebih luas untuk mencoba menarik berita Indonesia
+            const apiUrl = `https://newsapi.org/v2/everything?q=berita+indonesia&apiKey=6de5a7bd89774d9e9ad0d8054920c9da`; // Gantilah dengan API Key Anda
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const newsContainer = document.getElementById("news-container");
+                    newsContainer.innerHTML = ''; // Clear previous news
+                    if (data.articles && data.articles.length > 0) {
+                        data.articles.forEach(article => {
+                            const newsItem = `
+                                <div style="margin-bottom: 15px; background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);">
+                                    <h4 style="color: #ffffff;">${article.title}</h4>
+                                    <p style="color: #eaeaea;">${article.description}</p>
+                                    <a href="${article.url}" target="_blank" style="color: #00ffe7;">Baca lebih lanjut</a>
+                                </div>
+                            `;
+                            newsContainer.innerHTML += newsItem;
+                        });
+                    } else {
+                        newsContainer.innerHTML = '<p style="color: #ffffff;">Tidak ada berita terkait yang ditemukan. Coba tunggu beberapa saat untuk pembaruan berita.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching news:', error);
+                    const newsContainer = document.getElementById("news-container");
+                    newsContainer.innerHTML = '<p style="color: #ffffff;">Terjadi kesalahan dalam mengambil berita. Coba lagi nanti.</p>';
+                });
+        }
+
+        // Fungsi untuk menampilkan loading message
+        function showLoading() {
+            document.getElementById("loading-message").style.display = "block";
+        }
+
+        // Inisialisasi dengan berita umum tentang Indonesia saat halaman dimuat
+        document.addEventListener("DOMContentLoaded", function() {
+            fetchNews(); // Ambil berita umum mengenai Indonesia
+        });
+    </script>
 {% endblock %}
