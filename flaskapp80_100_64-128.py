@@ -224,7 +224,7 @@ def predict(stock):
 
     layout = go.Layout(
         title={
-            'text': f'Harga Saham {stock} - Historis dan Prediksi 6 Bulan ke Depan (Januari - Juni) 2025 (80/20 Epochs 100 2 Layer (64,128))',
+            'text': f'Harga Saham {stock} - Historis dan Prediksi 6 Bulan ke Depan (Januari - Juni) 2025 (80/20 (64,128))',
             'x': 0.5,
             'xanchor': 'center'
         },
